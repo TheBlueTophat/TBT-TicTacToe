@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Tic Tac Toe</h1>
+    <h3>Made by Ayden Bridges</h3>
+
+    <button onclick="randomizePlayer()" id="randPlayer">Who goes first?</button><br>
+    <span id="whoGoes"></span><br>
+    <span id="difficulty"></span><br>
+    <span id="randDifficulty"></span><br>
+
+    <span id="winlose"></span><br>
+    <span id="redo"></span><br>
+    <!--<button onclick="alert(lastMove);">bruh</button><br> -->
+
+    <span style="font-size:100px;font-family: 'Courier New', Courier, monospace;">
+         _ _ _ <br>
+        |<span id="0" onclick="run2(0)">_</span>|<span id="1" onclick="run2(1)">_</span>|<span id="2" onclick="run2(2)">_</span>| <br>
+
+        |<span id="3" onclick="run2(3)">_</span>|<span id="4" onclick="run2(4)">_</span>|<span id="5" onclick="run2(5)">_</span>| <br>
+
+        |<span id="6" onclick="run2(6)">_</span>|<span id="7" onclick="run2(7)">_</span>|<span id="8" onclick="run2(8)">_</span>| <br>
+    
+    </span>
+
+    <span id="scores"></span>
+
+    <script>
+
+        window.onload = showScore();
+
+        var board = [   0, 0, 0, 
+                        0 ,0 ,0 ,
+                        0 ,0 ,0];
+
+        var remainingSpaces = 9; // number of remaining slots left
+
+        var canStart = false;
+
+        var playerFirst = false;
+
+        var difficulty = -1;
+
+        var lastMove = -1;
+        
+        function run2(n)
+        {
+            if(board[n] == 0 && checkWin(1) == false && checkWin(-1) == false && canStart == true)
+            {
+                board[n] = 1; // user making a move
+
+                lastMove = n;
+
+                remainingSpaces -= 1;
+
+                // "render"ing player move
+                for(var i = 0; i < 9; i += 1)
+                {
+                    if(board[i] == 1)
+                    {
+                        document.getElementById(i).innerHTML = "O";
+                    }
+                }
+                
+                // searches if the player won
+                if(checkWin(1) == true)
+                {
+                    document.getElementById("winlose").innerHTML = "You win!";
+                    document.getElementById("redo").innerHTML = "<button onclick = 'restartGame()'>Restart!</button>";
+                    localStorage.setItem("wins", parseInt(localStorage.getItem("wins")) + 1);
+                    showScore();
+                }
+                else
+                {
+                    if(remainingSpaces > 0)
+                    {
+                        board[chooseBotMove(difficulty)] = -1;// the bot makes a move;
+
+                        remainingSpaces -= 1;
+                    }
+                    
+                    // "render"ing bot move
+                    for(var i = 0; i < 9; i += 1)
+                    {
+                        if(board[i] == -1)
+                        {
+                            document.getElementById(i).innerHTML = "X";
+                        }
+                    }
+
+                    if(checkWin(-1) == true)
+                    {
+                        document.getElementById("winlose").innerHTML = "You lose.";
+                        document.getElementById("redo").innerHTML = "<button onclick = 'restartGame()'>Restart!</button>";
+                        localStorage.setItem("losses", parseInt(localStorage.getItem("losses")) + 1);
+                        showScore();
+                    }
+                }
+
+                if(remainingSpaces == 0 && checkWin(1) == false && checkWin(-1) == false)
+                {
+                    document.getElementById("winlose").innerHTML = "That's a draw, nobody wins or loses.";
+                    document.getElementById("redo").innerHTML = "<button onclick = 'restartGame()'>Restart!</button>";
+                    localStorage.setItem("draws", parseInt(localStorage.getItem("draws")) + 1);
+                    showScore();
+                }
+            }
+        }
+
+        function checkWin(val)
+        {
+            // columns
+            for(var i = 0; i < 3; i += 1)
+            {
+                if(board[i] == val && board[i + 3] == val && board[i + 6] == val)
+                {
+                    return true;
+                }
+            }
+
+            // rows
+            for(var i = 0; i < 3; i += 1)
+            {
+                if(board[3*i] == val && board[3*i + 1] == val && board[3*i + 2] == val)
+                {
+                    return true;
+                }
+            }
+
+            // corners; center tile is index 4
+            if(board[4] == val && ((board[0] == val && board[8] == val) || (board[2] == val && board[6] == val)))
+            {
+                return true;
+            }
+
+            // all else fails
+            return false;
+        }
+
+        function restartGame()
+        {
+            for(var i = 0; i < 9; i += 1)
+            {
+                board[i] = 0;
+                document.getElementById(i).innerHTML = "_";
+            }
+
+            remainingSpaces = 9;
+
+            canStart = false;
+            playerFirst = false;
+            difficulty = -1;
+            lastMove = -1;
+
+            document.getElementById("redo").innerHTML = "";
+            document.getElementById("winlose").innerHTML = "";
+            document.getElementById("whoGoes").innerHTML = "";
+            document.getElementById("difficulty").innerHTML = "";
+            document.getElementById("randDifficulty").innerHTML = "";
+        }
+
+        function randomizePlayer()
+        {
+            if(difficulty == -1)
+            {
+                if(Math.random() < 0.5)
+                {
+                    playerFirst = true;
+                    document.getElementById("whoGoes").innerHTML = "Player goes first."
+                }
+                else
+                {
+                    playerFirst = false;
+                    document.getElementById("whoGoes").innerHTML = "Bot goes first."
+                }
+
+                document.getElementById("difficulty").innerHTML = "<button onclick = 'Difficulty(0)'>Easy</button> <button onclick = 'Difficulty(1)'>Medium</button> <button onclick = 'Difficulty(2)'>Hard</button>";
+            }
+        }
+
+        function Difficulty(d)
+        {
+            if(canStart == false)
+            {
+                if(d == 0)
+                {
+                    difficulty = 0;
+
+                    document.getElementById("randDifficulty").innerHTML = "Easy difficulty";
+                }
+                else if(d == 1)
+                {
+                    difficulty = 1;
+
+                    document.getElementById("randDifficulty").innerHTML = "Medium difficulty";
+                }
+                else if(d == 2)
+                {
+                    difficulty = 2;
+
+                    document.getElementById("randDifficulty").innerHTML = "Hard difficulty";
+                }
+
+                if(playerFirst == false)
+                {
+                    // initalizes bot's move
+                    if(remainingSpaces > 0)
+                    {
+                        board[chooseBotMove(difficulty)] = -1;// the bot makes a move;
+
+                        remainingSpaces -= 1;
+                    }
+
+                    // "render"ing bot move
+                    for(var i = 0; i < 9; i += 1)
+                    {
+                        if(board[i] == -1)
+                        {
+                            document.getElementById(i).innerHTML = "X";
+                        }
+                    }
+                }
+            }
+
+            canStart = true;
+        }
+
+        function chooseBotMove(d)
+        {
+            if(d == 0)
+            {
+                var botMove = Math.floor(Math.random() * 10);
+                while(board[botMove] != 0)
+                {
+                    botMove = Math.floor(Math.random() * 10);
+                }
+
+                return botMove;
+            }
+            else if(d == 1)
+            {
+                // Do the easy AI
+                if(Math.random() < 0.5)
+                {
+                    var botMove = Math.floor(Math.random() * 10);
+                    while(board[botMove] != 0)
+                    {
+                        botMove = Math.floor(Math.random() * 10);
+                    }
+
+                    return botMove;
+                }
+                else // Do the hard AI
+                {
+                    if(lastMove == -1)
+                    {
+                        // the player hasn't moved
+                        return 4 + Math.floor(Math.random() * 5) - Math.floor(Math.random() * 5);
+                    }
+                    else
+                    {
+                        if(board[8 - lastMove] != 0 || Math.random() < 0.1)
+                        {
+                            var botMove = Math.floor(Math.random() * 10);
+                            while(board[botMove] != 0)
+                            {
+                                botMove = Math.floor(Math.random() * 10);
+                            }
+
+                            return botMove;
+                        }
+                        else
+                        {
+                            // choosing the best move 90% of the time
+                            return 8 - lastMove;
+                        }
+                    }
+                }
+            }
+            else if(d == 2)
+            {
+                if(lastMove == -1)
+                {
+                    // the player hasn't moved
+                    return 4 + Math.floor(Math.random() * 5) - Math.floor(Math.random() * 5);
+                }
+                else
+                {
+                    if(board[8 - lastMove] != 0 || Math.random() < 0.1)
+                    {
+                        var botMove = Math.floor(Math.random() * 10);
+                        while(board[botMove] != 0)
+                        {
+                            botMove = Math.floor(Math.random() * 10);
+                        }
+
+                        return botMove;
+                    }
+                    else
+                    {
+                        // choosing the best move 90% of the time
+                        return 8 - lastMove;
+                    }
+                }
+            }
+        }
+
+        function showScore()
+        {
+            if(localStorage.getItem("wins") == null)
+            {
+                localStorage.setItem("wins", 0);
+            }
+
+            if(localStorage.getItem("losses") == null)
+            {
+                localStorage.setItem("losses", 0);
+            }
+
+            if(localStorage.getItem("draws") == null)
+            {
+                localStorage.setItem("draws", 0);
+            }
+
+            output = "Wins: " + localStorage.getItem("wins") + " Losses: " + localStorage.getItem("losses") + " Draws: " + localStorage.getItem("draws");
+
+            document.getElementById("scores").innerHTML = output;
+        }
+    </script>
+</body>
+</html>
